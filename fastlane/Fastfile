@@ -1,0 +1,25 @@
+# frozen_string_literal: true
+
+default_platform(:ios)
+
+platform :ios do
+  desc "Run unit tests"
+  lane :test do
+    run_tests(scheme: "ShopWave", devices: ["iPhone 16"])
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    increment_build_number(build_number: number_of_commits)
+    match(type: "appstore")
+    gym(scheme: "ShopWave", export_method: "app-store")
+    pilot(skip_waiting_for_build_processing: true)
+    slack(message: "New ShopWave iOS beta uploaded to TestFlight ✓")
+  end
+
+  desc "Submit to App Store"
+  lane :release do
+    beta
+    deliver(submit_for_review: true, automatic_release: false)
+  end
+end
